@@ -210,3 +210,106 @@ Grid.prototype.reset = function () {
     }
     return true;
 };
+
+function initialize() {
+    myGrid = new Grid();
+    moves = 0;
+    winner = 0;
+    gameOver = false;
+    whoseTurn = player; // default, this may change
+    for (var i = 0; i <= myGrid.cells.length - 1; i++) {
+        myGrid.cells[i] = 0;
+    }
+    // setTimeout(assignRoles, 500);
+    setTimeout(showOptions, 500);
+    // debugger;
+}
+
+// Ask player if they want to play as X or O. X goes first.
+function assignRoles() {
+    askUser("Do you want to go first?");
+    document.getElementById("yesBtn").addEventListener("click", makePlayerX);
+    document.getElementById("noBtn").addEventListener("click", makePlayerO);
+}
+
+function makePlayerX() {
+    player = x;
+    computer = o;
+    whoseTurn = player;
+    playerText = xText;
+    computerText = oText;
+    document.getElementById("userFeedback").style.display = "none";
+    document.getElementById("yesBtn").removeEventListener("click", makePlayerX);
+    document.getElementById("noBtn").removeEventListener("click", makePlayerO);
+}
+
+function makePlayerO() {
+    player = o;
+    computer = x;
+    whoseTurn = computer;
+    playerText = oText;
+    computerText = xText;
+    setTimeout(makeComputerMove, 400);
+    document.getElementById("userFeedback").style.display = "none";
+    document.getElementById("yesBtn").removeEventListener("click", makePlayerX);
+    document.getElementById("noBtn").removeEventListener("click", makePlayerO);
+}
+
+// executed when player clicks one of the table cells
+function cellClicked(id) {
+    // The last character of the id corresponds to the numeric index in Grid.cells:
+    var idName = id.toString();
+    var cell = parseInt(idName[idName.length - 1]);
+    if (myGrid.cells[cell] > 0 || whoseTurn !== player || gameOver) {
+        // cell is already occupied or something else is wrong
+        return false;
+    }
+    moves += 1;
+    document.getElementById(id).innerHTML = playerText;
+    // randomize orientation (for looks only)
+    var rand = Math.random();
+    if (rand < 0.3) {
+        document.getElementById(id).style.transform = "rotate(180deg)";
+    } else if (rand > 0.6) {
+        document.getElementById(id).style.transform = "rotate(90deg)";
+    }
+    document.getElementById(id).style.cursor = "default";
+    myGrid.cells[cell] = player;
+    // Test if we have a winner:
+    if (moves >= 5) {
+        winner = checkWin();
+    }
+    if (winner === 0) {
+        whoseTurn = computer;
+        makeComputerMove();
+    }
+    return true;
+}
+
+// Executed when player hits restart button.
+// ask should be true if we should ask users if they want to play as X or O
+function restartGame(ask) {
+    if (moves > 0) {
+        var response = confirm("Are you sure you want to start over?");
+        if (response === false) {
+            return;
+        }
+    }
+    gameOver = false;
+    moves = 0;
+    winner = 0;
+    whoseTurn = x;
+    myGrid.reset();
+    for (var i = 0; i <= 8; i++) {
+        var id = "cell" + i.toString();
+        document.getElementById(id).innerHTML = "";
+        document.getElementById(id).style.cursor = "pointer";
+        document.getElementById(id).classList.remove("win-color");
+    }
+    if (ask === true) {
+        // setTimeout(assignRoles, 200);
+        setTimeout(showOptions, 200);
+    } else if (whoseTurn == computer) {
+        setTimeout(makeComputerMove, 800);
+    }
+}
